@@ -16,3 +16,6 @@ class SnippetSerializerTests(TestCase):
     def test_serializer(self):
         serializer = SnippetSerializer(self.snippet)
         self.assertEqual(serializer.data, {'id': 2, 'title': '', 'code': 'print(\"hello, world\")\n', 'linenos': False, 'language': 'python', 'style': 'friendly'})
+
+        content = JSONRenderer().render(serializer.data)
+        self.assertEqual(content, b'{"id":2,"title":"","code":"print(\\"hello, world\\")\\n","linenos":false,"language":"python","style":"friendly"}')
