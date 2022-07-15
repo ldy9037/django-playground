@@ -35,26 +35,21 @@ class SnippetURLTests(APITestCase):
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         
-        stream = io.BytesIO(response.content)
-        data = JSONParser().parse(stream)
-
-        self.assertEqual(data['id'], snippet.id)
-        self.assertEqual(data['title'], snippet.title)
-        self.assertEqual(data['code'], snippet.code)
-        self.assertEqual(data['linenos'], snippet.linenos)
-        self.assertEqual(data['language'], snippet.language)
-        self.assertEqual(data['style'], snippet.style)
+        self.assertEqual(response.data['id'], snippet.id)
+        self.assertEqual(response.data['title'], snippet.title)
+        self.assertEqual(response.data['code'], snippet.code)
+        self.assertEqual(response.data['linenos'], snippet.linenos)
+        self.assertEqual(response.data['language'], snippet.language)
+        self.assertEqual(response.data['style'], snippet.style)
         
+        data = response.data.copy()
         data['title'] = "title1"
 
         response = self.client.put(url, data, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        stream = io.BytesIO(response.content)
-        data = JSONParser().parse(stream)
-
-        self.assertEqual(data['id'], snippet.id)
-        self.assertNotEqual(data['title'], snippet.title)
+        self.assertEqual(response.data['id'], snippet.id)
+        self.assertNotEqual(response.data['title'], snippet.title)
 
         response = self.client.delete(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
