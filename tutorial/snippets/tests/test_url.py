@@ -17,18 +17,15 @@ class SnippetURLTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        stream = io.BytesIO(response.content)
-        data = JSONParser().parse(stream)
-
-        self.assertEqual(data['id'], 1)
-        self.assertEqual(data['code'], 'test')
+        self.assertEqual(response.data['id'], 1)
+        self.assertEqual(response.data['code'], 'test')
         
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         stream = io.BytesIO(response.content)
         data = JSONParser().parse(stream)
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(response.data), 1)
         
     def test_snippet_detail(self):
         snippet = Snippet.objects.create(code = "test")
