@@ -1,4 +1,3 @@
-import email
 from django.test import TestCase
 from django.contrib.auth.models import User
 from snippets.models import Snippet
@@ -7,38 +6,71 @@ from snippets.serializers import UserSerializer
 
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
-from collections import OrderedDict
 import io
 
 class SnippetSerializerTests(TestCase):
-    def setUp(self):
-        self.user = User(username="ldy", email="ldy9037@naver.com", password="12345678")
-        self.user.save()
-
-        self.snippet = Snippet(code='foo = "bar"\n', owner=self.user)
-        self.snippet.save()
-        
-        self.snippet = Snippet(code='print("hello, world")\n', owner=self.user)
-        self.snippet.save()
-
     def test_user_serializer(self):
-        serializer = UserSerializer(self.user)
-        self.assertEqual(serializer.data, {'id': 1, 'username': 'ldy', 'snippets': [1, 2]})
-        
-    def test_snippet_serializer(self):
-        serializer = SnippetSerializer(self.snippet)
-        self.assertEqual(serializer.data, {'id': 2, 'title': '', 'code': 'print("hello, world")\n', 'linenos': False, 'language': 'python', 'style': 'friendly', 'owner': 1})
-
-        content = JSONRenderer().render(serializer.data)
-        self.assertEqual(content, b'{"id":2,"title":"","code":"print(\\"hello, world\\")\\n","linenos":false,"language":"python","style":"friendly","owner":1}')
-
-        stream = io.BytesIO(content)
-        data = JSONParser().parse(stream)
-        serializer = SnippetSerializer(data=data)
+        serializer = UserSerializer(data={'username': 'ldy'})
         
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data, OrderedDict([('title', ''), ('code', 'print("hello, world")'), ('linenos', False), ('language', 'python'), ('style', 'friendly'), ('owner', self.user)]))
-        serializer.save()
+        self.assertEqual(serializer.validated_data['username'], 'ldy')      
 
-        serializer = SnippetSerializer(Snippet.objects.all(), many=True)
-        self.assertEqual(serializer.data, [OrderedDict([('id', 1), ('title', ''), ('code', 'foo = "bar"\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly'), ('owner', 1)]), OrderedDict([('id', 2), ('title', ''), ('code', 'print("hello, world")\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly'), ('owner', 1)]), OrderedDict([('id', 3), ('title', ''), ('code', 'print("hello, world")'), ('linenos', False), ('language', 'python'), ('style', 'friendly'), ('owner', 1)])])
+        user = serializer.save()
+        
+        self.assertEqual(user.id, 1)
+        self.assertEqual(user.username, 'ldy')
+
+        # 직렬화
+        serializer = UserSerializer(user)
+        content = JSONRenderer().render(serializer.data)
+        self.assertJSONEqual(content, {'id': 1, 'username': 'ldy', 'snippets': []})
+        
+        # 역직렬화 
+        stream = io.BytesIO(content)
+        data = JSONParser().parse(stream)
+
+        self.assertEqual(data['id'], 1)
+        self.assertEqual(data['username'], 'ldy')
+        self.assertEqual(data['snippets'], []) 
+
+    def test_snippet_serializer(self):
+        user = User.objects.create(username="ldy")
+        
+        self.assertEqual(user.id, 1)
+        self.assertEqual(user.username, 'ldy')
+
+        serializer = SnippetSerializer(data={'code':'foo = "bar"\n'})
+
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data['code'], 'foo = "bar"')
+
+        snippet = serializer.save(owner=user)
+        
+        self.assertEqual(snippet.id, 1)
+        self.assertEqual(snippet.code, 'foo = "bar"')
+        self.assertEqual(snippet.owner, user)
+        
+        # 직렬화
+        serializer = SnippetSerializer(snippet)
+        content = JSONRenderer().render(serializer.data)
+        self.assertJSONEqual(content, {
+            'id': 1, 
+            'title': '', 
+            'code': 'foo = "bar"', 
+            'linenos': False,
+            'language': 'python',
+            'style': 'friendly',
+            'owner': 'ldy'
+        })
+
+        # 역직렬화 
+        stream = io.BytesIO(content)
+        data = JSONParser().parse(stream)
+    
+        self.assertEqual(data['id'], 1)
+        self.assertEqual(data['title'], '')
+        self.assertEqual(data['code'], 'foo = "bar"')
+        self.assertEqual(data['linenos'], False)
+        self.assertEqual(data['language'], 'python')
+        self.assertEqual(data['style'], 'friendly')
+        self.assertEqual(data['owner'], 'ldy')
