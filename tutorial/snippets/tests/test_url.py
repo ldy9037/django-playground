@@ -24,6 +24,7 @@ class SnippetURLTests(APITestCase):
         self.assertEqual(response.data['code'], 'test')
         
         format_suffix_url = url[:-1]+'.json'
+        self.client.force_authenticate(user=None)
         response = self.client.get(format_suffix_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -48,6 +49,7 @@ class SnippetURLTests(APITestCase):
         data = response.data.copy()
         data['title'] = "title1"
 
+        self.client.force_authenticate(user=self.user)
         response = self.client.put(url, data, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
