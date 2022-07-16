@@ -49,6 +49,11 @@ class SnippetURLTests(APITestCase):
         data = response.data.copy()
         data['title'] = "title1"
 
+        new_user = User.objects.create(username="hani")
+        self.client.force_authenticate(user=new_user)
+        response = self.client.put(url, data, format='json')
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
         self.client.force_authenticate(user=self.user)
         response = self.client.put(url, data, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
