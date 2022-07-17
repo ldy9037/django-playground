@@ -3,8 +3,6 @@ from snippets.models import Snippet
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 from rest_framework import status
-from rest_framework.test import force_authenticate
-from snippets.serializers import UserSerializer
 
 class SnippetURLTests(APITestCase):
     def setUp(self):
@@ -12,7 +10,7 @@ class SnippetURLTests(APITestCase):
 
     def test_snippet_list(self):
         url = reverse('snippet_list')
-
+        
         data = {
             'code': 'test'
         }
@@ -78,3 +76,24 @@ class SnippetURLTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'ldy')
+    
+    def test_root_url(self):
+        snippet = Snippet.objects.create(code = "test", owner = self.user)
+        snippet.save()
+
+        snippet = Snippet.objects.create(code = "test2", owner = self.user)
+        snippet.save()
+
+        url = reverse('api_root')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        users_response = self.client.get(response.data['users'])
+        self.assertEqual(users_response.status_code, status.HTTP_200_OK)   
+        self.assertEqual(len(users_response.data), 1)
+        
+        snippets_response = self.client.get(response.data['snippets'])
+        self.assertEqual(snippets_response.status_code, status.HTTP_200_OK)  
+        self.assertEqual(len(snippets_response.data), 2) 
+    
