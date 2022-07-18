@@ -4,13 +4,19 @@ from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer
 from snippets.serializers import UserSerializer
 
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 import io
 
 class SnippetSerializerTests(TestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.request = self.factory.get('/')
+
     def test_user_serializer(self):
-        serializer = UserSerializer(data={'username': 'ldy'})
+        serializer = UserSerializer(data={'username': 'ldy'}, context={'request': Request(self.request)})
         
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data['username'], 'ldy')      
@@ -21,9 +27,9 @@ class SnippetSerializerTests(TestCase):
         self.assertEqual(user.username, 'ldy')
 
         # 직렬화
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'request': Request(self.request)})
         content = JSONRenderer().render(serializer.data)
-        self.assertJSONEqual(content, {'id': 1, 'username': 'ldy', 'snippets': []})
+        self.assertJSONEqual(content, {'url':'http://testserver/users/1/', 'id': 1, 'username': 'ldy', 'snippets': []})
         
         # 역직렬화 
         stream = io.BytesIO(content)
@@ -39,7 +45,7 @@ class SnippetSerializerTests(TestCase):
         self.assertEqual(user.id, 1)
         self.assertEqual(user.username, 'ldy')
 
-        serializer = SnippetSerializer(data={'code':'foo = "bar"\n'})
+        serializer = SnippetSerializer(data={'code':'foo = "bar"\n'}, context={'request': Request(self.request)})
 
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data['code'], 'foo = "bar"')
@@ -51,16 +57,18 @@ class SnippetSerializerTests(TestCase):
         self.assertEqual(snippet.owner, user)
         
         # 직렬화
-        serializer = SnippetSerializer(snippet)
+        serializer = SnippetSerializer(snippet, context={'request': Request(self.request)})
         content = JSONRenderer().render(serializer.data)
         self.assertJSONEqual(content, {
+            'url': 'http://testserver/snippets/1/',
             'id': 1, 
-            'title': '', 
-            'code': 'foo = "bar"', 
+            'highlight': 'http://testserver/snippets/1/highlight/',
+            'owner': 'ldy',
+            'title': '',
+            'code': 'foo = "bar"',
             'linenos': False,
             'language': 'python',
-            'style': 'friendly',
-            'owner': 'ldy'
+            'style': 'friendly'
         })
 
         # 역직렬화 
