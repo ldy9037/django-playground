@@ -25,7 +25,7 @@ class SnippetURLTests(APITestCase):
         self.client.force_authenticate(user=None)
         response = self.client.get(format_suffix_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_snippet_detail(self):
         snippet = Snippet.objects.create(code = "test", owner = self.user)
@@ -68,7 +68,7 @@ class SnippetURLTests(APITestCase):
 
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK) 
-        self.assertEqual(len(response.data), 1)   
+        self.assertEqual(len(response.data['results']), 1)   
 
     def test_user_detail(self):
         url = reverse('user-detail', kwargs={'pk': self.user.id})
@@ -90,12 +90,12 @@ class SnippetURLTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         users_response = self.client.get(response.data['users'])
-        self.assertEqual(users_response.status_code, status.HTTP_200_OK)   
-        self.assertEqual(len(users_response.data), 1)
+        self.assertEqual(users_response.status_code, status.HTTP_200_OK)  
+        self.assertEqual(len(users_response.data['results']), 1)
         
         snippets_response = self.client.get(response.data['snippets'])
         self.assertEqual(snippets_response.status_code, status.HTTP_200_OK)  
-        self.assertEqual(len(snippets_response.data), 2) 
+        self.assertEqual(len(snippets_response.data['results']), 2) 
     
     def test_snippet_highlight(self):
         snippet = Snippet.objects.create(code = 'foo = "bar"\n', owner = self.user)
