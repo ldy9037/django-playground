@@ -97,3 +97,11 @@ class SnippetURLTests(APITestCase):
         self.assertEqual(snippets_response.status_code, status.HTTP_200_OK)  
         self.assertEqual(len(snippets_response.data), 2) 
     
+    def test_snippet_highlight(self):
+        snippet = Snippet.objects.create(code = 'foo = "bar"\n', owner = self.user)
+        snippet.save()
+
+        url = reverse('snippet_highlight', kwargs={'pk': snippet.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('class="highlight"' in response.data)
