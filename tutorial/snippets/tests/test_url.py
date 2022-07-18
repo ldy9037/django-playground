@@ -9,7 +9,7 @@ class SnippetURLTests(APITestCase):
         self.user = User.objects.create(username="ldy")
 
     def test_snippet_list(self):
-        url = reverse('snippet_list')
+        url = reverse('snippet-list')
         
         data = {
             'code': 'test'
@@ -31,7 +31,7 @@ class SnippetURLTests(APITestCase):
         snippet = Snippet.objects.create(code = "test", owner = self.user)
         snippet.save()
 
-        url = reverse('snippet_detail', kwargs={'pk': snippet.id})
+        url = reverse('snippet-detail', kwargs={'pk': snippet.id})
         format_suffix_url = url[:-1]+'.json'
 
         response = self.client.get(format_suffix_url)
@@ -64,14 +64,14 @@ class SnippetURLTests(APITestCase):
         self.assertEqual(Snippet.objects.count(), 0)
     
     def test_user_list(self):
-        url = reverse('user_list')
+        url = reverse('user-list')
 
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK) 
         self.assertEqual(len(response.data), 1)   
 
     def test_user_detail(self):
-        url = reverse('user_detail', kwargs={'pk': self.user.id})
+        url = reverse('user-detail', kwargs={'pk': self.user.id})
         
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -101,7 +101,7 @@ class SnippetURLTests(APITestCase):
         snippet = Snippet.objects.create(code = 'foo = "bar"\n', owner = self.user)
         snippet.save()
 
-        url = reverse('snippet_highlight', kwargs={'pk': snippet.id})
+        url = reverse('snippet-highlight', kwargs={'pk': snippet.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('class="highlight"' in response.data)
